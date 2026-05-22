@@ -335,20 +335,17 @@
       max-width: 580px;
       margin: 3rem auto;
     }
-    .drop-area {
+    .file-label {
+      display: block;
       border: 2px dashed #adb5bd;
       border-radius: 8px;
       padding: 2rem 1rem;
       text-align: center;
       cursor: pointer;
       transition: background 0.15s, border-color 0.15s;
-      user-select: none;
     }
-    .drop-area:hover,
-    .drop-area.dragover {
-      background: #e9f0ff;
-      border-color: #0d6efd;
-    }
+    .file-label:hover { background: #e9f0ff; border-color: #0d6efd; }
+    #pdf-input { display: none; }
     #file-info {
       display: none;
       background: #f1f3f5;
@@ -364,34 +361,19 @@
 </head>
 <body>
 
-<!-- Navbar -->
-<section class="menu menu3 cid-sFAA5oUu2Y" id="menu3-1">
-  <nav class="navbar navbar-dropdown navbar-expand-lg">
-    <div class="container-fluid">
-      <div class="navbar-brand">
-        <span class="navbar-caption-wrap">
-          <a class="navbar-caption text-primary display-5" href="index.html">Simpósio de Geometalurgia</a>
-        </span>
-      </div>
-    </div>
-  </nav>
-</section>
-
 <main class="container">
   <div class="form-card">
 
     <h5 class="fw-bold mb-1">Enviar Proposta</h5>
     <p class="text-muted small mb-4">
-      Destinatário: <strong>dmazzinghy@demin.ufmg.br</strong> &nbsp;·&nbsp; Apenas PDF &nbsp;·&nbsp; Máx. 10 MB
+      Destinatário: <strong>dmazzinghy@demin.ufmg.br</strong> &nbsp;·&nbsp; Apenas PDF &nbsp;·&nbsp; Máx. 5 MB
     </p>
 
     <form
-      action="https://formsubmit.co/deividmark4321@gmail.com"
+      action="https://formsubmit.co/dmazzinghy@demin.ufmg.br"
       method="POST"
       enctype="multipart/form-data"
-      id="proposal-form"
     >
-      <!-- Configurações Formsubmit -->
       <input type="hidden" name="_subject" value="Proposta — III Simpósio de Geometalurgia (2028)">
       <input type="hidden" name="_captcha" value="false">
       <input type="hidden" name="_next" value="https://seusite.github.io/obrigado.html">
@@ -407,16 +389,18 @@
         <input type="email" name="email" class="form-control" placeholder="seu@email.com" required>
       </div>
 
-      <!-- Upload PDF -->
       <div class="mb-3">
         <label class="form-label fw-semibold">Arquivo PDF da proposta</label>
-        <div class="drop-area" id="drop-area" onclick="document.getElementById('pdf-input').click()">
+
+        <!-- Label clicável que aciona o input real -->
+        <label class="file-label" for="pdf-input">
           <div style="font-size:2rem; margin-bottom:0.4rem;">📄</div>
-          <p class="mb-1 text-muted small">Clique para selecionar ou arraste aqui</p>
-          <small class="text-muted">Somente PDF — máximo 10 MB</small>
-        </div>
-        <!-- name="attachment" é o campo que o Formsubmit usa para anexos -->
-        <input type="file" id="pdf-input" name="attachment" accept="application/pdf" style="display:none;" required>
+          <p class="mb-1 text-muted small">Clique para selecionar o arquivo</p>
+          <small class="text-muted">Somente PDF — máximo 5 MB</small>
+        </label>
+
+        <!-- Input nativo — name="attachment" é obrigatório para o Formsubmit enviar o anexo -->
+        <input type="file" id="pdf-input" name="attachment" accept="application/pdf" required>
 
         <div id="file-info">
           <span style="font-size:1.3rem; flex-shrink:0;">📎</span>
@@ -424,7 +408,6 @@
             <p id="file-name" class="mb-0 fw-semibold small text-truncate"></p>
             <p id="file-size" class="mb-0 text-muted" style="font-size:0.75rem;"></p>
           </div>
-          <button type="button" onclick="clearFile()" class="btn btn-sm btn-link text-muted p-0" aria-label="Remover arquivo">✕</button>
         </div>
 
         <div id="file-error" class="text-danger small mt-1" style="display:none;"></div>
@@ -438,69 +421,39 @@
   </div>
 </main>
 
-<!-- Footer -->
-<section class="footer3 cid-sFAOjz8nX7" id="footer3-d">
-  <div class="container">
-    <div class="media-container-row align-center mbr-white">
-      <div class="row row-links">
-        <ul class="foot-menu">
-          <li class="foot-menu-item mbr-fonts-style display-7">© Copyright 2026 - Simpósio de Geometalurgia. All Rights Reserved.</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
 <script>
-  const input    = document.getElementById('pdf-input');
-  const dropArea = document.getElementById('drop-area');
-  const fileInfo = document.getElementById('file-info');
-  const fileName = document.getElementById('file-name');
-  const fileSize = document.getElementById('file-size');
-  const fileErr  = document.getElementById('file-error');
-  const sendBtn  = document.getElementById('send-btn');
+  const input   = document.getElementById('pdf-input');
+  const info    = document.getElementById('file-info');
+  const nameEl  = document.getElementById('file-name');
+  const sizeEl  = document.getElementById('file-size');
+  const errEl   = document.getElementById('file-error');
+  const sendBtn = document.getElementById('send-btn');
 
-  // Sincroniza drag-and-drop com o input real do formulário
-  function handleFile(file) {
-    fileErr.style.display = 'none';
-    if (!file) return;
-    if (file.type !== 'application/pdf') {
-      fileErr.textContent = 'O arquivo deve estar em formato PDF.';
-      fileErr.style.display = 'block';
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      fileErr.textContent = 'O arquivo excede o limite de 10 MB.';
-      fileErr.style.display = 'block';
-      clearFile();
-      return;
-    }
-    // Injeta o arquivo no input nativo (necessário para o form enviar)
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    input.files = dt.files;
-
-    fileName.textContent = file.name;
-    fileSize.textContent = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
-    fileInfo.classList.add('show');
-    sendBtn.disabled = false;
-  }
-
-  function clearFile() {
-    input.value = '';
-    fileInfo.classList.remove('show');
+  input.addEventListener('change', function() {
+    errEl.style.display = 'none';
+    info.classList.remove('show');
     sendBtn.disabled = true;
-    fileErr.style.display = 'none';
-  }
 
-  input.addEventListener('change', () => handleFile(input.files[0]));
+    const file = this.files[0];
+    if (!file) return;
 
-  dropArea.addEventListener('dragover',  e => { e.preventDefault(); dropArea.classList.add('dragover'); });
-  dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragover'));
-  dropArea.addEventListener('drop', e => {
-    e.preventDefault();
-    dropArea.classList.remove('dragover');
-    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+    if (file.type !== 'application/pdf') {
+      errEl.textContent = 'O arquivo deve estar em formato PDF.';
+      errEl.style.display = 'block';
+      input.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      errEl.textContent = 'O arquivo excede o limite de 5 MB.';
+      errEl.style.display = 'block';
+      input.value = '';
+      return;
+    }
+
+    nameEl.textContent = file.name;
+    sizeEl.textContent = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+    info.classList.add('show');
+    sendBtn.disabled = false;
   });
 </script>
 
