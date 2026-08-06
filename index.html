@@ -439,7 +439,8 @@
     >
       <input type="hidden" name="_subject" value="Proposta — III Simpósio de Geometalurgia (2028)">
       <input type="hidden" name="_captcha" value="false">
-      <input type="hidden" name="_next" value="https://seusite.github.io/obrigado.html">
+      <!-- O valor é ajustado automaticamente pelo script no final da página para o domínio real -->
+      <input type="hidden" id="next-url" name="_next" value="obrigado.html">
       <input type="hidden" name="_template" value="table">
 
       <div class="mb-3">
@@ -491,6 +492,11 @@
   const sizeEl  = document.getElementById('file-size');
   const errEl   = document.getElementById('file-error');
   const sendBtn = document.getElementById('send-btn');
+
+  // O Formsubmit exige uma URL absoluta em _next — monta a partir do endereço atual,
+  // assim funciona em qualquer domínio (localhost, GitHub Pages, domínio próprio).
+  document.getElementById('next-url').value =
+    new URL('obrigado.html', window.location.href).href;
 
   input.addEventListener('change', function() {
     errEl.style.display = 'none';
